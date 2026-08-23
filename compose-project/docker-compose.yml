@@ -13,8 +13,37 @@ services:
       - chalenkovv-my-netology-hw
     restart: unless-stopped
 
+  # ===== Pushgateway — приём метрик от краткосрочных задач =====
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: chalenkovv-netology-pushgateway
+    ports:
+      - "9091:9091"                     # доступ к веб-интерфейсу и API извне
+    networks:
+      - chalenkovv-my-netology-hw       # та же сеть, что и у Prometheus
+    restart: unless-stopped
+
+  # ===== Grafana =====
+  grafana:
+    image: grafana/grafana:latest
+    container_name: chalenkovv-netology-grafana
+    ports:
+      - "80:3000"                         # внешний доступ через порт 80 хоста
+    volumes:
+      - ./grafana/config:/etc/grafana     # монтируем папку с кастомным конфигом
+      - grafana-data:/var/lib/grafana     # том для данных (дашборды, БД)
+    environment:
+      - GF_PATHS_CONFIG=/etc/grafana/custom.ini   # указываем путь к файлу настроек
+    networks:
+      - chalenkovv-my-netology-hw
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - pushgateway
+
 volumes:
   prometheus-data:
+  grafana-data:
 
 networks:
   chalenkovv-my-netology-hw:
